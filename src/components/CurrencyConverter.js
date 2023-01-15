@@ -1,85 +1,110 @@
 import React, { useEffect, useState } from "react";
 
 export default function CurrencyConverter() {
-  const [currencyOne, setCurrencyOne] = useState("");
-  const [currencyTwo, setCurrencyTwo] = useState("");
-  const [currencyFrom, setCurrencyFrom] = useState("USD");
-  const [currencyTo, setCurrencyTo] = useState("INR");
+  let currencies = [
+    "CAD",
+    "HKD",
+    "CZK",
+    "INR",
+    "CHF",
+    "EUR",
+    "JPY",
+    "USD",
+    "AUD",
+  ];
+  const [baseCurrency, setBaseCurrency] = useState("USD");
+  const [otherCurrency, setotherCurrency] = useState("INR");
+  const [baseValue, setbaseValue] = useState(0);
+  const [conversionRate, setConversionRate] = useState(0);
+  const [convertedValue, setConvertedValue] = useState(0);
 
-  const [currencySelectorOne, setCurrencySelectorOne] = useState([]);
   useEffect(() => {
-    currencyData();
-    console.log("Success");
-  }, []);
-  //fetch("https://api.apilayer.com/exchangerates_data/convert?to=INR&from=USD&amount=5", requestOptions)
-  const currencyData = async () => {
-    try {
-      let myHeaders = new Headers();
-      myHeaders.append("apikey", "dznzx2HwMzCohBpZq2JXpPyldLRWUT5L");
-      const requestOptions = {
-        method: "GET",
-        redirect: "follow",
-        headers: myHeaders,
-      };
-      const response = await fetch(
-        "https://api.apilayer.com/exchangerates_data/symbols",
-        requestOptions
-      );
-      const data = await response.json();
-      setCurrencySelectorOne(Object.keys(data.symbols));
-    } catch (err) {
-      console.log(err);
-    }
-  };
-
-  const handleChange = async (e) => {
-    console.log("Change");
-  };
-
-  const selectFrom = (e) => {
-    setCurrencyFrom(e.target.value);
-  };
-  const selectTo = (e) => {
-    setCurrencyTo(e.target.value);
-  };
+    fetch(`https://api.exchangeratesapi.io/latest?base=${baseCurrency}`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data);
+        setConversionRate(data.rates[otherCurrency]);
+      });
+  }, [baseCurrency]);
 
   return (
-    <div>
-      <h1>Currency Convertor</h1>
-      <select
-        name="Select"
-        id="currencySelector1"
-        value={currencyFrom}
-        onChange={selectFrom}
-      >
-        {currencySelectorOne &&
-          currencySelectorOne.map((currency, i) => (
-            <option value={currency} key={i}>
-              {currency}
-            </option>
-          ))}
-      </select>
-      <input
-        id="currency1"
-        type="text"
-        value={currencyOne}
-        onChange={handleChange}
-      />
-      <br />
-      <select
-        name="Select"
-        id="currencySelector2"
-        value={currencyTo}
-        onChange={selectTo}
-      >
-        {currencySelectorOne &&
-          currencySelectorOne.map((currency, i) => (
-            <option value={currency} key={i}>
-              {currency}
-            </option>
-          ))}
-      </select>
-      <input id="currency2" type="text" value={currencyTwo} />
+    <div className="row mt-5">
+      {" "}
+      <div className="col-md-4 offset-md-4 border p-5">
+        <h1>Currency Converter</h1>
+        <form>
+          <div className="form-row mt-5">
+            <div className="col-3">
+              <select
+                className="form-control baseCurrency "
+                onChange={(e) => {
+                  setBaseCurrency(e.target.value);
+                }}
+                name="baseCurrency"
+                value={baseCurrency}
+              >
+                {currencies.map((currency) => (
+                  <option key={currency} value={currency}>
+                    {currency}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="col-9">
+              <input
+                className="form-control"
+                name="baseCurrency"
+                type="number"
+                value={baseValue}
+                onChange={(e) => {
+                  if (+e.target.value >= 0) {
+                    setbaseValue(e.target.value);
+                    setConvertedValue(
+                      Math.round(e.target.value * conversionRate * 100) / 100
+                    );
+                  }
+                }}
+              ></input>
+            </div>
+          </div>
+          <div className="form-row mt-2">
+            <div className="col-3">
+              <select
+                className="form-control otherCurrency"
+                onChange={(e) => {
+                  setotherCurrency(e.target.value);
+                }}
+                name="otherCurrency"
+                value={otherCurrency}
+              >
+                {currencies.map((currency) =>
+                  baseCurrency !== currency ? (
+                    <option key={currency} value={currency}>
+                      {currency}
+                    </option>
+                  ) : undefined
+                )}
+              </select>
+            </div>
+            <div className="col-9">
+              <input
+                name="baseCurrency"
+                className="form-control"
+                type="number"
+                onChange={(e) => {
+                  if (+e.target.value >= 0) {
+                    setConvertedValue(e.target.value);
+                    setbaseValue(
+                      Math.round((e.target.value / conversionRate) * 100) / 100
+                    );
+                  }
+                }}
+                value={convertedValue}
+              ></input>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
